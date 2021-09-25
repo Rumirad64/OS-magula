@@ -4,7 +4,10 @@
 #include <dirent.h>
 
 bool IsOccupied();
-
+void viewAll();
+void download(char filename[]);
+void acquireLock();
+void releaseLock();
 char shared_location[] = "shared folder/";
 
 int main(int argc, char *argv[])
@@ -15,7 +18,6 @@ int main(int argc, char *argv[])
         printf("Upload a new case study                  :   upload <filename>\n");
         printf("Download an available case study         :   download <filename>\n");
         printf("Delete a case study                      :   delete <filename>\n");
-        IsOccupied();
         return 0;
     }
 
@@ -23,75 +25,102 @@ int main(int argc, char *argv[])
     {
         printf("Single argument provided \n");
         printf("argument -> %s \n", argv[1]);
-        if (strcmpi(argv[1], "viewall") == 0) //! Viewall function
+        if (strcmp(argv[1], "viewall") == 0) //! Viewall function
         {
             puts("In viewall");
-            FILE *file_pointer;
-            file_pointer = fopen(strcat(shared_location, "lock"), "w+");
-            fprintf(file_pointer, "This is testing for fprintf...\n");
-            fclose(file_pointer);
+            if(IsOccupied())
+			{
+				puts("Cant access directory Someone is using it \n");
+			}
+			else{
+				acquireLock();
+				viewAll();
+				releaseLock();
+			}
         }
     }
     else if (argc == 3) //? Two argument provided
     {
         printf("Two argument provided \n");
         printf("argument -> %s , %s \n", argv[1], argv[2]);
-        if (strcmpi(argv[1], "download") == 0) //! Download function
+        if (strcmp(argv[1], "download") == 0) //! Download function
         {
             puts("In download");
-            FILE *file_pointer;
-            file_pointer = fopen(strcat(shared_location, "lock"), "w+");
-            fprintf(file_pointer, "This is testing for fprintf...\n");
-            fclose(file_pointer);
+            if(IsOccupied())
+			{
+				puts("Cant access directory Someone is using it \n");
+			}
+			else{
+				acquireLock();
+				download(argv[2]);
+				releaseLock();
+			}
         }
     }
 
-    printf("argc %d \n", argc);
+    //printf("argc %d \n", argc);
 }
 
-bool IsOccupied()
-{
+bool IsOccupied(){
     FILE *file_pointer;
     char msg[20];
     file_pointer = fopen("shared folder/lock", "r");
     fscanf(file_pointer, "%s", msg);
     printf("Lock status ->  %s \n", msg);
     fclose(file_pointer);
-    if (strcmp(msg, "occupied") == 0)
-    {
+    if (strcmp(msg, "occupied") == 0){
         return true;
     }
-    else if (strcmp(msg, "available") == 0)
-    {
+    else if (strcmp(msg, "available") == 0){
         return false;
     }
-    else
-    {
+    else{
         printf("lock file corrupted \n");
         return true;
     }
 }
-void viewAll()
-{
+void viewAll(){
     DIR *d;
     struct dirent *dir;
     char path[1000] = "shared folder/contents/";
     d = opendir(path);
     char full_path[1000];
-    if (d)
-    {
-        while ((dir = readdir(d)) != NULL)
-        {
+    if (d){
+        while ((dir = readdir(d)) != NULL){
             //Condition to check regular file.
-            if (dir->d_type == DT_REG)
-            {
+            if (dir->d_type == DT_REG){
                 full_path[0] = '\0';
-                strcat(full_path, path);
-                strcat(full_path, "/");
                 strcat(full_path, dir->d_name);
                 printf("%s\n", full_path);
             }
         }
         closedir(d);
     }
+}
+
+void download(char filename[])
+{
+	printf("Downloading file -> %s \n", filename);
+	char path[] = "shared folder/contents/";
+	strcat(path , filename);
+	execl("/bin/cp", "-i", "-p",path , filename, (char *)0);
+	printf("Downloaded file -> %s \n", filename);
+}
+
+void acquireLock(){
+	FILE *file_pointer;
+    file_pointer = fopen("shared folder/lock", "w");
+    fprintf(file_pointer,"%s","occupied");
+    printf("Lock acquired \n");
+    fclose(file_pointer);
+    
+}
+
+void releaseLock(){
+	FILE *file_pointer;
+    file_pointer = fopen("shared folder/lock", "w");
+    fprintf(file_pointer,"%s","available");
+    printf("Lock released \n");
+    fclose(file_pointer);
+    
 }
