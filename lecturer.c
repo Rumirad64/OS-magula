@@ -108,19 +108,19 @@ void download(char filename[])
 }
 
 void acquireLock(){
-	FILE *file_pointer;
-    file_pointer = fopen("shared folder/lock", "w");
-    fprintf(file_pointer,"%s","occupied");
+	FILE *file_pointer1;
+    file_pointer1 = fopen("shared folder/lock", "w");
+    fprintf(file_pointer1,"%s","occupied");
     printf("Lock acquired \n");
-    fclose(file_pointer);
+    fclose(file_pointer1);
     
 }
 
 void releaseLock(){
-	FILE *file_pointer;
-    file_pointer = fopen("shared folder/lock", "w");
-    fprintf(file_pointer,"%s","available");
+	FILE *file_pointer2;
+    file_pointer2 = fopen("shared folder/lock", "w");
+    fprintf(file_pointer2,"%s","available");
     printf("Lock released \n");
-    fclose(file_pointer);
+    fclose(file_pointer2);
     
 }
